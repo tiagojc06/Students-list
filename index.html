@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Students list (V2)</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <h1>Students List</h1>
+    <div class="students-list">
+        <div class="options-section">
+            <h2>Students Options</h2>
+            <div class="options-section__options">
+                <div id="add-student-section" class="options__option">
+                    <div id="add-student__icon-section" class="option-section__icon-section">
+                        <i class="icon-section__icon fa-solid fa-user-plus" title="Add student" aria-label="Open/Close Add Student Section"></i>
+                        <label class="icon-section__title" for="add-student-name">Add Student</label>
+                    </div>
+                    <div id="add-student__input-section" class="option-section__input-section">
+                        <div class="input-section__main-section">
+                            <input id="add-student-name" class="input-section__input" placeholder="Nombre del Estudiante"></input>
+                            <ul id="add-student__message-section" class="input-section__message-section"></ul>
+                        </div>
+                        <button id="add-student__send-button" class="input-section__send-button">Send Name</button>
+                    </div>
+                </div>
+        
+                <div id="modify-student-section" class="options__option">
+                    <div id="modify-student__icon-section" class="option-section__icon-section">
+                        <i class="icon-section__icon fa-solid fa-user-pen" title="Modify student" aria-label="Open/Close Modify Student Section"></i>
+                        <label class="icon-section__title" for="modify-student-name">Modify Qualifications</label>
+                    </div>
+                    <div id="modify-student__input-section" class="option-section__input-section">
+                        <div class="input-section__main-section">
+                            <input id="modify-student-name" class="input-section__input" placeholder="Nombre del Estudiante"></input>
+                            <ul id="modify-student__message-section" class="input-section__message-section"></ul>
+                        </div>
+                        <button id="modify-student__send-button" class="input-section__send-button">Search student</button>
+                    </div>
+                </div>
+        
+                <div id="delete-student-section" class="options__option">
+                    <div id="delete-student__icon-section" class="option-section__icon-section">
+                        <i class="icon-section__icon fa-solid fa-user-slash" title="Delete student" aria-label="Open/Close Delete Student Section"></i>
+                        <label class="icon-section__title" for="delete-student">Delete Student</label>
+                    </div>
+                    <div id="delete-student__input-section" class="option-section__input-section">
+                        <div class="input-section__main-section">
+                            <input id="delete-student" class="input-section__input" placeholder="Nombre del Estudiante"></input>
+                            <ul id="delete-student__message-section" class="input-section__message-section"></ul>
+                        </div>
+                        <button id="delete-student__send-button" class="input-section__send-button">Delete student</button>
+                    </div>
+                </div>
+        
+                <div id="list-students-section" class="options__option">
+                    <div id="list-students__icon-section" class="option-section__icon-section">
+                        <i class="icon-section__icon fa-solid fa-list" title="List students" aria-label="Open/Close List Students Section"></i>
+                        <span class="icon-section__title">List Students</span>
+                    </div>
+                    <div id="list-students__input-section" class="option-section__input-section">
+                        <div class="input-section__main-section">
+                            <div class="input-section__inputs">
+                                <button id="aggregate-order" class="input-section__button">Show students by Aggregate Order</button>
+                                <button id="alphabetic-order" class="input-section__button">Show students by Alphabetic Order</button>
+                            </div>
+                            <ul id="list-students__message-section" class="input-section__message-section"></ul>
+                        </div>
+                    </div>
+                </div>
+        
+                <div id="student-average-section" class="options__option">
+                    <div id="student-average__icon-section" class="option-section__icon-section">
+                        <i class="icon-section__icon fa-solid fa-address-book" title="Student average" aria-label="Open/Close Student Qualifications Average Section"></i>
+                        <span class="icon-section__title">Qualifications Average</span>
+                    </div>
+                    <div id="student-average__input-section" class="option-section__input-section">
+                        <div class="input-section__inputs">
+    
+                            <div id="one-student-average-section" class="inputs__input-section">
+                                <div class="input-section__main-section">
+                                    <div id="one-student-average-inputs" class="main-section__input-elements">
+                                        <!-- LABEL -->
+                                        <div class="input-elements__input">
+                                            <button id="one-student-average-button" class="input-section__button">Search average by Name</button>
+                                            <!-- INPUT -->
+                                        </div>
+                                    </div>
+                                    <ul id="one-student-average__message-section" class="input-section__message-section"></ul>
+                                </div>
+                                <!-- BOTON DE ENVIAR -->
+                            </div>
+                            
+                            <div id="range-student-average-section" class="inputs__input-section">
+                                <div class="input-section__main-section">
+                                    <div id="range-student-average-inputs" class="main-section__input-elements">
+                                        <div class="input-elements__label-section">
+                                            <!-- LABEL -->
+                                            <!-- I -->
+                                        </div>
+                                        <div class="input-elements__input">
+                                            <button id="range-student-average-button" class="input-section__button">Search average by Range</button>
+                                            <!-- INPUT -->
+                                        </div>
+                                    </div>
+                                    <ul id="range-student-average__message-section" class="input-section__message-section"></ul>
+                                </div>
+                                <!-- BOTON DE ENVIAR -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="options-section__options-expanded"></div>
+        </div>
+
+        <div class="students-section">
+            <h2 class="students-section__title"></h2>
+            <div class="students-section__options"> 
+                <i id="students-section__update-button" class="students-section__option fa-solid fa-rotate-right" aria-label="Recharge Students Section"></i>
+                <i id="students-section__close-button" class="students-section__option fa-solid fa-xmark" aria-label="Close Students Section"></i>
+            </div>
+            <div class="students-section__student-container"></div>
+        </div>
+    </div>
+    <div class="overlay">
+        <div class="select-student-section">
+            <i class="select-student__close-button fa-solid fa-xmark" aria-label="Close Select Student Modal"></i>
+            <h2 class="select-student__title">Select Student</h2>
+            <div class="select-student__students">
+
+            </div>
+        </div>
+    </div>
+    <script src="code.js"></script>
+</body>
+</html>
