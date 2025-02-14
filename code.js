@@ -169,7 +169,7 @@ const getIDBData = (mode,msg) =>{
     const IDBtransaction = db.transaction("students",mode);
     const objectStore = IDBtransaction.objectStore("students");
     IDBtransaction.addEventListener("complete",()=>{
-        if (msg !== undefined) console.log(msg);
+        if (msg) console.log(msg);
     })
     return objectStore;
 }
@@ -303,82 +303,99 @@ const MODE_COMPARE_VALUES = "compareValues";
 const MODE_COMPARE_AND_ADD = "compareAndAdd";
 const MODE_ADD_VALUES = "addValues";
 
-const readObjects = (mode, inputValue)=> {
+const readObjects = async (mode, inputValue) => {
+    
+    const count = await getStudentsAmount();
+
     return new Promise((resolve, reject) => {
-        getStudentsAmount().then(count => {
-            let studentsAmount = count;
-            console.log(studentsAmount);
+        let studentsAmount = count;
+        console.log(studentsAmount, typeof studentsAmount);
 
-            if (studentsAmount == 0) {
-                // console.log("No hay ningún estudiante en la base de datos.");
-                resolve([null, 1]);  // Resuelve la promesa con null si no hay datos
-            } else {
-                const IDBData = getIDBData("readonly");
-                const cursor = IDBData.openCursor();
-                let studentsList = [];
+        if (studentsAmount === 0) {
+            resolve([null, 1]);  // Resuelve la promesa con null si no hay datos
+        } else {
+            const IDBData = getIDBData("readonly");
+            const cursor = IDBData.openCursor();
+            let studentsList = [];
 
-                cursor.addEventListener("success",()=>{
-                    if (cursor.result) {
-                        if (mode == MODE_COMPARE_VALUES) {
-                            if (inputValue == cursor.result.value.name) {
-                                console.log(`El nombre ${inputValue} COINCIDE con un nombre guardado en la base de datos.`);
-                                studentsList.push([cursor.result.value.name, cursor.result.value.age, cursor.result.key, cursor.result.value.qualifications]);
-                            } else console.log(`El nombre ${inputValue} NO COINCIDE con el nombre ${cursor.result.value.name} guardado en la base de datos.`);
-                            cursor.result.continue();
-                        } 
-                        else if (mode == MODE_COMPARE_AND_ADD) {
-                            let qualifications;
+            cursor.addEventListener("success", () => {
+                if (cursor.result) {
+                    const { name: nameDB, age: ageDB, qualifications: qualificationsDB } = cursor.result.value;
+                    const { key: keyDB } = cursor.result;
 
-                            if (Array.isArray(inputValue)) qualifications = inputValue;
-                            else qualifications = cursor.result.value.qualifications;
+                    console.log(nameDB, ageDB, qualificationsDB, keyDB);
 
-                            let qualificationsTotal = 0;
+                    if (mode === MODE_COMPARE_VALUES) {
+                        if (inputValue === nameDB) {
+                            console.log(`El nombre ${inputValue} COINCIDE con un nombre guardado en la base de datos.`);
 
-                            for (let i = 0; i < qualifications.length; i++) {
-                                qualificationsTotal += qualifications[i];
-                            }
-                            let qualificationsAverage = qualificationsTotal / qualifications.length;
+                            studentsList.push([nameDB, ageDB, keyDB, qualificationsDB]);
+                        } else {
+                            console.log(`El nombre ${inputValue} NO COINCIDE con el nombre ${nameDB} guardado en la base de datos.`);
+                        }
+                        cursor.result.continue();
+                    } 
 
-                            console.log(qualifications, inputValue);
-                            console.log("qualificationsTotal: ", qualificationsTotal);
-                            console.log("qualificationsAverage: ", qualificationsAverage);
+                    else if (mode === MODE_COMPARE_AND_ADD) {
+                        let qualifications;
 
-                            if (Array.isArray(inputValue)) {
-                                qualificationsAverage = processQualAver(qualificationsAverage);
-
-                                studentsList.push(qualificationsAverage);
-                                resolve(studentsList);
-                            } else {
-                                if (inputValue <= qualificationsAverage) {
-                                    qualificationsAverage = processQualAver(qualificationsAverage);
-                                    studentsList.push([cursor.result.value.name, cursor.result.key, qualificationsAverage]);
-                                }
-                                cursor.result.continue();
-                            }
-                        } 
-                        else if (mode == MODE_ADD_VALUES) {
-                            studentsList.push([cursor.result.value.name, cursor.result.key]);
-                            console.log(studentsList, studentsList.length);
-                            cursor.result.continue();
-                        } 
+                        if (Array.isArray(inputValue)) {
+                            qualifications = inputValue;
+                        }
                         else {
-                            reject(new Error("Modo no soportado"));
+                            qualifications = qualificationsDB;
                         }
-                    } else {
-                        console.log("Todos los datos fueron leídos");
-                        switch (mode) {
-                            case MODE_COMPARE_VALUES:
-                                if (studentsList.length !== 0) resolve(studentsList);
-                                else resolve([null, 2]);  // Resuelve la promesa con null si no hay coincidencias;
-                                break;
-                            case MODE_COMPARE_AND_ADD:
-                            case MODE_ADD_VALUES:
-                                resolve(studentsList);
+
+                        let qualificationsTotal = 0;
+
+                        for (let i = 0; i < qualifications.length; i++) {
+                            qualificationsTotal += qualifications[i];
                         }
+
+                        let qualificationsAverage = qualificationsTotal / qualifications.length;
+
+                        console.log(qualifications, inputValue);
+                        console.log("qualificationsTotal: ", qualificationsTotal);
+                        console.log("qualificationsAverage: ", qualificationsAverage);
+
+                        if (Array.isArray(inputValue)) {
+                            qualificationsAverage = processQualAver(qualificationsAverage);
+
+                            studentsList.push(qualificationsAverage);
+                            resolve(studentsList);
+                        } else {
+                            if (inputValue <= qualificationsAverage) {
+                                qualificationsAverage = processQualAver(qualificationsAverage);
+                                studentsList.push([nameDB, keyDB, qualificationsAverage]);
+                            }
+                            cursor.result.continue();
+                        }
+                    } 
+
+                    else if (mode === MODE_ADD_VALUES) {
+                        studentsList.push([nameDB, keyDB]);
+                        console.log(studentsList, studentsList.length);
+                        cursor.result.continue();
                     }
-                })
-            }
-        });
+
+                } else {
+                    console.log("Todos los datos fueron leídos");
+                    switch (mode) {
+                        case MODE_COMPARE_VALUES:
+                            if (studentsList.length !== 0) {
+                                resolve(studentsList);
+                            }
+                            else {
+                                resolve([null, 2]);  // Resuelve la promesa con null si no hay coincidencias
+                            }
+                            break;
+                        case MODE_COMPARE_AND_ADD:
+                        case MODE_ADD_VALUES:
+                            resolve(studentsList);
+                    }
+                }
+            })
+        }
     })
 }
 
@@ -569,35 +586,37 @@ const ALPHABETIC_ORDER = "Alphabetic Order";
 const AVERAGE_BY_NAME = "Average By Name";
 const AVERAGE_BY_RANGE = "Average By Range";
 
-const listStudents = async(typeOfListing, inputValue, input) => {
-    switch(typeOfListing){
+const listStudents = async (typeOfListing, inputValue, input) => {
+    switch(typeOfListing) {
         case AGGREGATE_ORDER:
         case ALPHABETIC_ORDER:
-            readObjects(MODE_ADD_VALUES).then((studentsList)=>{
-                const verifyNoStudentsInList = studentsList[0] == null && studentsList[1] == 1 ? "No hay ningún estudiante añadido a la base de datos." : null;
-                if (verifyInputValue(listStudentsMessageSection, verifyNoStudentsInList)) {
-                    switch(typeOfListing) {
-                        case AGGREGATE_ORDER:
-                            console.log("Lista de estudiantes por orden de agregado:");
-                            studentsSectionTitle.textContent = "Students list by Aggregate Order";
-                            showStudents(studentsList);
-                            break;
-                        case ALPHABETIC_ORDER:
-                            console.log("Lista de estudiantes por orden alfabético:");
-                            studentsSectionTitle.textContent = "Students list by Alphabetic Order";
-                            studentsList.sort();
-                            showStudents(studentsList);
-                    }
-                } else {
-                    closeSection(studentsSection, true);
-                    console.log("ERROR");
+            let studentsList = await readObjects(MODE_ADD_VALUES);
+
+            let verifyNoStudentsInList = studentsList[0] == null && studentsList[1] == 1 ? "No hay ningún estudiante añadido a la base de datos." : null;
+
+            if (verifyInputValue(listStudentsMessageSection, verifyNoStudentsInList)) {
+                switch(typeOfListing) {
+                    case AGGREGATE_ORDER:
+                        console.log("Lista de estudiantes por orden de agregado:");
+                        studentsSectionTitle.textContent = "Students list by Aggregate Order";
+                        showStudents(studentsList);
+                        break;
+                    case ALPHABETIC_ORDER:
+                        console.log("Lista de estudiantes por orden alfabético:");
+                        studentsSectionTitle.textContent = "Students list by Alphabetic Order";
+                        studentsList.sort();
+                        showStudents(studentsList);
                 }
-            })
+            } else {
+                closeSection(studentsSection, true);
+                console.log("ERROR");
+            }
             break;
+
         case AVERAGE_BY_NAME:
             let studentData = await readObjects(MODE_COMPARE_VALUES, inputValue);
 
-            const verifyNoStudentsInList = studentData[0] == null && studentData[1] == 1 ? "No hay ningún estudiante añadido a la base de datos." : null;
+            verifyNoStudentsInList = studentData[0] == null && studentData[1] == 1 ? "No hay ningún estudiante añadido a la base de datos." : null;
             const verifyStudentNotFound = studentData[0] == null && studentData[1] == 2 ? "Ingrese un nombre válido: el nombre no coincide con el de ningún estudiante." : null;
 
             if (verifyInputValue(studentAverageByNameMessageSection, verifyNoStudentsInList, verifyStudentNotFound)) {
@@ -613,30 +632,30 @@ const listStudents = async(typeOfListing, inputValue, input) => {
                 studentAverageByNameMessageSection.previousElementSibling.lastElementChild.value = "";
                 console.log(`Promedio del Estudiante "${inputValue}":`);
                 studentsSectionTitle.textContent = `Average of Student "${inputValue}"`;
-                readObjects(MODE_COMPARE_AND_ADD, qualifications).then((qualificationsAverage)=>{
-                    showStudents(qualificationsAverage);
-                })
+                const qualificationsAverage = await readObjects(MODE_COMPARE_AND_ADD, qualifications);
+                showStudents(qualificationsAverage);
             } else {
                 closeSection(studentsSection, true);
                 console.log("ERROR");
             }
             break;
-        case AVERAGE_BY_RANGE:
-            readObjects(MODE_COMPARE_AND_ADD, inputValue).then((studentsList)=>{
-                const verifyNoStudentsInList = studentsList[0] == null && studentsList[1] == 1 ? "No hay ningún estudiante añadido a la base de datos." : null;
 
-                if (verifyInputValue(studentAverageByRangeMessageSection, verifyNoStudentsInList)) {
-                    console.log(`Lista de estudiantes con promedios mayores o iguales a ${inputValue}:`);
-                    studentsSectionTitle.textContent = `Students with an Average Higher or Same than ${inputValue}`;
-                    console.log(studentsList);
-                    showStudents(studentsList, true);
-                } else {
-                    closeSection(studentsSection, true);
-                    console.log("ERROR");
-                }
-            })
+        case AVERAGE_BY_RANGE:
+            studentsList = await readObjects(MODE_COMPARE_AND_ADD, inputValue)
+
+            verifyNoStudentsInList = studentsList[0] == null && studentsList[1] == 1 ? "No hay ningún estudiante añadido a la base de datos." : null;
+
+            if (verifyInputValue(studentAverageByRangeMessageSection, verifyNoStudentsInList)) {
+                console.log(`Lista de estudiantes con promedios mayores o iguales a ${inputValue}:`);
+                studentsSectionTitle.textContent = `Students with an Average Higher or Same than ${inputValue}`;
+                console.log(studentsList);
+                showStudents(studentsList, true);
+            } else {
+                closeSection(studentsSection, true);
+                console.log("ERROR");
+            }
     }
-    return [typeOfListing, inputValue, input];
+    return { typeOfListing, inputValue, input };
 }
 
 const showStudents = (studentsList, caseAverByRange) =>{
@@ -706,22 +725,20 @@ createStudent = (error, textContent, documentFragment, caseAverByRange)=>{
 }
 
 
-document.getElementById("students-section__update-button").addEventListener("click",()=>{
-    lastTypeOfListing.then(lastTypeOfListing=>{
-        switch (lastTypeOfListing[0]) {
-            case AGGREGATE_ORDER:
-                listStudents(AGGREGATE_ORDER);
-                break;
-            case ALPHABETIC_ORDER:
-                listStudents(ALPHABETIC_ORDER);
-                break;
-            case AVERAGE_BY_NAME:
-                listStudents(AVERAGE_BY_NAME, lastTypeOfListing[1], lastTypeOfListing[2]);
-                break;
-            case AVERAGE_BY_RANGE:
-                listStudents(AVERAGE_BY_RANGE, lastTypeOfListing[1]);
-        }
-    })
+document.getElementById("students-section__update-button").addEventListener("click", async ()=>{
+    switch (lastTypeOfListing.typeOfListing) {
+        case AGGREGATE_ORDER:
+            listStudents(AGGREGATE_ORDER);
+            break;
+        case ALPHABETIC_ORDER:
+            listStudents(ALPHABETIC_ORDER);
+            break;
+        case AVERAGE_BY_NAME:
+            listStudents(AVERAGE_BY_NAME, lastTypeOfListing.inputValue, lastTypeOfListing.input);
+            break;
+        case AVERAGE_BY_RANGE:
+            listStudents(AVERAGE_BY_RANGE, lastTypeOfListing.inputValue);
+    }
 })
 
 document.getElementById("students-section__close-button").addEventListener("click",()=>{
@@ -743,13 +760,13 @@ const closeSection = (section, conservePosTemp) =>{
 
 let lastTypeOfListing;
 
-listStudentsAggrButton.addEventListener("click",()=>{
+listStudentsAggrButton.addEventListener("click", async() => {
     // El error con el ID ocurria porque a los nombres con espacios entre medio se les aplicaba un ID más por cada espacio en blanco, por lo tanto, ese nombre terminaba teniendo varios IDs y no se comparaban bien.
-    lastTypeOfListing = listStudents(AGGREGATE_ORDER);
+    lastTypeOfListing = await listStudents(AGGREGATE_ORDER);
 })
 
-listStudentsAlphButton.addEventListener("click",()=>{
-    lastTypeOfListing = listStudents(ALPHABETIC_ORDER);
+listStudentsAlphButton.addEventListener("click", async() => {
+    lastTypeOfListing = await listStudents(ALPHABETIC_ORDER);
 })
 
 
